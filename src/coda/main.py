@@ -58,7 +58,9 @@ def _initialize_components() -> tuple[RepositoryIndexer, LLMClient, CodaGraph]:
     if _indexer is None:
         logger.info("Initializing system components...")
         _indexer = RepositoryIndexer()
-        _llm_client = create_llm_client(use_mock=USE_MOCK_LLM, model=LITELLM_MODEL, provider=LITELLM_PROVIDER)
+        _llm_client = create_llm_client(
+            use_mock=USE_MOCK_LLM, model=LITELLM_MODEL, provider=LITELLM_PROVIDER
+        )
         _coda_graph = CodaGraph(_indexer, _llm_client)
 
         # Log which LLM client is being used
@@ -92,7 +94,9 @@ def _cleanup_old_runs(runs_dir: Path, current_run_id: str) -> None:
 
     try:
         # Get all run directories (excluding current run)
-        run_dirs = [d for d in runs_dir.iterdir() if d.is_dir() and d.name != current_run_id]
+        run_dirs = [
+            d for d in runs_dir.iterdir() if d.is_dir() and d.name != current_run_id
+        ]
 
         if len(run_dirs) <= 1:
             # Keep at most 1 old run + current run = 2 total
@@ -116,7 +120,7 @@ def _cleanup_old_runs(runs_dir: Path, current_run_id: str) -> None:
         # Don't fail the main workflow if cleanup fails
 
 
-@app.post("/runs", status_code=status.HTTP_201_CREATED)
+@app.post("/runs", status_code=status.HTTP_201_CREATED)  # type: ignore
 async def create_run(request: RunRequest) -> dict[str, Any]:
     """
     Execute a complete multi-agent workflow for code generation and testing.
@@ -235,10 +239,18 @@ async def create_run(request: RunRequest) -> dict[str, Any]:
                     "error_message": result.error_message,
                     "planner_spec": (
                         {
-                            "tasks": (result.planner_spec.tasks if result.planner_spec else []),
-                            "context": (result.planner_spec.context if result.planner_spec else ""),
+                            "tasks": (
+                                result.planner_spec.tasks if result.planner_spec else []
+                            ),
+                            "context": (
+                                result.planner_spec.context
+                                if result.planner_spec
+                                else ""
+                            ),
                             "estimated_changes": (
-                                result.planner_spec.estimated_changes if result.planner_spec else []
+                                result.planner_spec.estimated_changes
+                                if result.planner_spec
+                                else []
                             ),
                         }
                         if result.planner_spec
@@ -246,12 +258,18 @@ async def create_run(request: RunRequest) -> dict[str, Any]:
                     ),
                     "coder_output": (
                         {
-                            "diff": (result.coder_output.diff if result.coder_output else ""),
+                            "diff": (
+                                result.coder_output.diff if result.coder_output else ""
+                            ),
                             "commit_message": (
-                                result.coder_output.commit_message if result.coder_output else ""
+                                result.coder_output.commit_message
+                                if result.coder_output
+                                else ""
                             ),
                             "explanation": (
-                                result.coder_output.explanation if result.coder_output else ""
+                                result.coder_output.explanation
+                                if result.coder_output
+                                else ""
                             ),
                         }
                         if result.coder_output
@@ -286,12 +304,24 @@ async def create_run(request: RunRequest) -> dict[str, Any]:
                     "tester_output": (
                         {
                             "success": (
-                                result.tester_output.success if result.tester_output else False
+                                result.tester_output.success
+                                if result.tester_output
+                                else False
                             ),
-                            "stdout": (result.tester_output.stdout if result.tester_output else ""),
-                            "stderr": (result.tester_output.stderr if result.tester_output else ""),
+                            "stdout": (
+                                result.tester_output.stdout
+                                if result.tester_output
+                                else ""
+                            ),
+                            "stderr": (
+                                result.tester_output.stderr
+                                if result.tester_output
+                                else ""
+                            ),
                             "exit_code": (
-                                result.tester_output.exit_code if result.tester_output else 1
+                                result.tester_output.exit_code
+                                if result.tester_output
+                                else 1
                             ),
                         }
                         if result.tester_output
@@ -327,7 +357,7 @@ async def create_run(request: RunRequest) -> dict[str, Any]:
         ) from e
 
 
-@app.get("/health")
+@app.get("/health")  # type: ignore
 async def health_check() -> dict[str, str]:
     """
     System health check endpoint.
@@ -380,9 +410,9 @@ async def _setup_workspace(repo_path: str, workspace_path: Path, branch: str) ->
         pass
 
 
-def main():
+def main() -> None:
     """Run the FastAPI server."""
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)  # nosec B104
 
 
 if __name__ == "__main__":

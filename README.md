@@ -15,11 +15,11 @@ Coda orchestrates four specialized AI agents through a LangGraph workflow to aut
 - **Safe Git Operations** - Isolated branch creation and patch validation
 - **Sandboxed Testing** - Docker containers with network isolation
 
-## Quick Start
+## Getting Started
 
 ```bash
 # Clone and setup
-git clone <repository-url>
+git clone git@github.com:varunbiluri/coda.git
 cd coda
 uv venv && source .venv/bin/activate
 uv pip install -e .
@@ -240,6 +240,10 @@ graph LR
 | **Tester**        | Runs tests in isolated Docker containers                | Docker + pytest            |
 
 ## Development
+
+```bash
+pip install --upgrade invoke
+```
 
 ### Commands
 

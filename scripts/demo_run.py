@@ -39,7 +39,9 @@ def main():
             sys.exit(1)
         print("SUCCESS: Coda server is running")
     except requests.exceptions.RequestException:
-        print("ERROR: Cannot connect to Coda server. Make sure it's running on port 8000")
+        print(
+            "ERROR: Cannot connect to Coda server. Make sure it's running on port 8000"
+        )
         print("   Run: python main.py")
         sys.exit(1)
 

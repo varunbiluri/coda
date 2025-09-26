@@ -76,7 +76,9 @@ class ApplyPatchAgent:
             new_branch.checkout()
 
             # Write diff to temporary file
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".patch", delete=False) as f:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".patch", delete=False
+            ) as f:
                 f.write(coder_output.diff)
                 patch_file = f.name
 

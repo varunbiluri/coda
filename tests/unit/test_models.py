@@ -21,7 +21,9 @@ class TestRunRequest:
 
     def test_run_request_creation(self):
         """Test creating a RunRequest with valid data."""
-        request = RunRequest(goal="Add health endpoint", repo_path="/path/to/repo", branch="main")
+        request = RunRequest(
+            goal="Add health endpoint", repo_path="/path/to/repo", branch="main"
+        )
         assert request.goal == "Add health endpoint"
         assert request.repo_path == "/path/to/repo"
         assert request.branch == "main"
@@ -31,8 +33,10 @@ class TestRunRequest:
         # Test with different branch names
         request = RunRequest(goal="Fix bug", repo_path="/repo", branch="develop")
         assert request.branch == "develop"
-        
-        request = RunRequest(goal="Add feature", repo_path="/repo", branch="feature/new-api")
+
+        request = RunRequest(
+            goal="Add feature", repo_path="/repo", branch="feature/new-api"
+        )
         assert request.branch == "feature/new-api"
 
 
@@ -96,13 +100,27 @@ class TestPlannerSpec:
     def test_planner_spec_creation(self):
         """Test creating a PlannerSpec with valid data."""
         tasks = [
-            {"id": "task1", "description": "Add endpoint", "files_to_modify": ["app.py"], "priority": "high"},
-            {"id": "task2", "description": "Add tests", "files_to_modify": ["test_app.py"], "priority": "medium"}
+            {
+                "id": "task1",
+                "description": "Add endpoint",
+                "files_to_modify": ["app.py"],
+                "priority": "high",
+            },
+            {
+                "id": "task2",
+                "description": "Add tests",
+                "files_to_modify": ["test_app.py"],
+                "priority": "medium",
+            },
         ]
         spec = PlannerSpec(
             tasks=tasks,
             context="Adding new API endpoint with comprehensive testing",
-            estimated_changes=["Create new route handler", "Add unit tests", "Update documentation"],
+            estimated_changes=[
+                "Create new route handler",
+                "Add unit tests",
+                "Update documentation",
+            ],
         )
         assert spec.tasks == tasks
         assert spec.context == "Adding new API endpoint with comprehensive testing"
@@ -127,14 +145,14 @@ class TestPlannerSpec:
                 "description": "Refactor authentication system",
                 "files_to_modify": ["auth.py", "middleware.py", "models.py"],
                 "priority": "high",
-                "dependencies": ["update_database_schema"]
+                "dependencies": ["update_database_schema"],
             },
             {
                 "id": "add_middleware",
                 "description": "Add request logging middleware",
                 "files_to_modify": ["middleware.py"],
-                "priority": "medium"
-            }
+                "priority": "medium",
+            },
         ]
         spec = PlannerSpec(
             tasks=tasks,
@@ -160,16 +178,18 @@ class TestCoderOutput:
 +@app.get("/health")
 +def health_check():
 +    return {"status": "healthy"}"""
-        
+
         output = CoderOutput(
             diff=diff,
             commit_message="Add health endpoint",
             explanation="Added a health check endpoint for service monitoring",
         )
         assert "--- a/app/main.py" in output.diff
-        assert "@app.get(\"/health\")" in output.diff
+        assert '@app.get("/health")' in output.diff
         assert output.commit_message == "Add health endpoint"
-        assert output.explanation == "Added a health check endpoint for service monitoring"
+        assert (
+            output.explanation == "Added a health check endpoint for service monitoring"
+        )
 
     def test_coder_output_with_complex_diff(self):
         """Test CoderOutput with complex multi-file diff."""
@@ -201,7 +221,7 @@ class TestCoderOutput:
 +    response = client.get("/health")
 +    assert response.status_code == 200
 +    assert response.json() == {"status": "healthy"}"""
-        
+
         output = CoderOutput(
             diff=diff,
             commit_message="Add health endpoint with comprehensive tests",
@@ -260,10 +280,10 @@ class TestTesterOutput:
     def test_tester_output_success(self):
         """Test creating a successful TesterOutput."""
         output = TesterOutput(
-            success=True, 
-            stdout="test_health.py::test_health_endpoint PASSED\n1 passed in 0.05s", 
-            stderr="", 
-            exit_code=0
+            success=True,
+            stdout="test_health.py::test_health_endpoint PASSED\n1 passed in 0.05s",
+            stderr="",
+            exit_code=0,
         )
         assert output.success is True
         assert "PASSED" in output.stdout
@@ -273,10 +293,10 @@ class TestTesterOutput:
     def test_tester_output_failure(self):
         """Test creating a failed TesterOutput."""
         output = TesterOutput(
-            success=False, 
-            stdout="", 
-            stderr="FAILED test_health.py::test_health_endpoint - AssertionError: Expected status code 200, got 404", 
-            exit_code=1
+            success=False,
+            stdout="",
+            stderr="FAILED test_health.py::test_health_endpoint - AssertionError: Expected status code 200, got 404",
+            exit_code=1,
         )
         assert output.success is False
         assert "FAILED" in output.stderr
@@ -289,7 +309,7 @@ class TestTesterOutput:
             success=True,
             stdout="test_health.py::test_health_endpoint PASSED\n1 passed in 0.05s",
             stderr="WARNING: Deprecated function used in test_health.py:12",
-            exit_code=0
+            exit_code=0,
         )
         assert output.success is True
         assert output.exit_code == 0
@@ -301,7 +321,7 @@ class TestTesterOutput:
             success=False,
             stdout="",
             stderr="ERROR: Test execution timed out after 30 seconds",
-            exit_code=124  # Standard timeout exit code
+            exit_code=124,  # Standard timeout exit code
         )
         assert output.success is False
         assert output.exit_code == 124
@@ -319,7 +339,7 @@ class TestRunResult:
             planner_spec={"tasks": [{"id": "task1", "description": "Add endpoint"}]},
             coder_output={"diff": "--- a/file.py", "commit_message": "Add feature"},
             apply_patch_output={"success": True, "commit_hash": "abc123"},
-            tester_output={"success": True, "exit_code": 0}
+            tester_output={"success": True, "exit_code": 0},
         )
         assert result.status == RunStatus.SUCCESS
         assert result.planner_spec["tasks"][0]["id"] == "task1"
@@ -334,7 +354,7 @@ class TestRunResult:
             planner_spec={"tasks": [{"id": "task1", "description": "Add endpoint"}]},
             coder_output={"diff": "invalid diff", "commit_message": "Add feature"},
             apply_patch_output={"success": False, "error_message": "Git apply failed"},
-            tester_output=None
+            tester_output=None,
         )
         assert result.status == RunStatus.FAILED
         assert "corrupt patch" in result.error_message

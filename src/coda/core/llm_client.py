@@ -9,7 +9,6 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 try:
-    import litellm
     from litellm import completion
 
     LITELLM_AVAILABLE = True
@@ -34,7 +33,9 @@ class LLMClient(ABC):
         pass
 
     @abstractmethod
-    def generate_code_diff(self, planner_spec: dict[str, Any], context: str) -> dict[str, str]:
+    def generate_code_diff(
+        self, planner_spec: dict[str, Any], context: str
+    ) -> dict[str, str]:
         """Generate code diff and commit message.
 
         Args:
@@ -50,7 +51,7 @@ class LLMClient(ABC):
 class MockLLMClient(LLMClient):
     """Mock LLM client for testing and demo purposes."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize mock client with predefined responses."""
         self.responses = {
             "health_endpoint": {
@@ -59,13 +60,13 @@ class MockLLMClient(LLMClient):
                         {
                             "id": "add_health_endpoint",
                             "description": "Add /health endpoint to FastAPI app",
-                            "files_to_modify": ["app/main.py"],
+                            "files_to_modify": "app/main.py",
                             "priority": "high",
                         },
                         {
                             "id": "add_health_test",
                             "description": "Add test for /health endpoint",
-                            "files_to_modify": ["tests/test_health.py"],
+                            "files_to_modify": "tests/test_health.py",
                             "priority": "high",
                         },
                     ],
@@ -95,7 +96,27 @@ class MockLLMClient(LLMClient):
         """Generate a mock planner specification."""
         # For demo purposes, return health endpoint spec for any goal containing "health"
         if "health" in goal.lower():
-            return self.responses["health_endpoint"]["planner_spec"]
+            return {
+                "tasks": [
+                    {
+                        "id": "add_health_endpoint",
+                        "description": "Add /health endpoint to FastAPI app",
+                        "files_to_modify": "app/main.py",
+                        "priority": "high",
+                    },
+                    {
+                        "id": "add_health_test",
+                        "description": "Add test for /health endpoint",
+                        "files_to_modify": "tests/test_health.py",
+                        "priority": "high",
+                    },
+                ],
+                "context": "Adding health check endpoint for service monitoring",
+                "estimated_changes": [
+                    'Add GET /health endpoint returning {"status": "healthy"}',
+                    "Add corresponding test case",
+                ],
+            }
 
         # Default generic response
         return {
@@ -103,7 +124,7 @@ class MockLLMClient(LLMClient):
                 {
                     "id": "implement_goal",
                     "description": f"Implement: {goal}",
-                    "files_to_modify": ["app/main.py"],
+                    "files_to_modify": "app/main.py",
                     "priority": "high",
                 }
             ],
@@ -111,15 +132,19 @@ class MockLLMClient(LLMClient):
             "estimated_changes": [f"Implement {goal}"],
         }
 
-    def generate_code_diff(self, planner_spec: dict[str, Any], context: str) -> dict[str, str]:
+    def generate_code_diff(
+        self, planner_spec: dict[str, Any], context: str
+    ) -> dict[str, str]:
         """Generate a mock code diff."""
         # Check if this is a health endpoint task
         tasks = planner_spec.get("tasks", [])
         if any("health" in task.get("description", "").lower() for task in tasks):
             return {
-                "diff": self.responses["health_endpoint"]["diff"],
-                "commit_message": self.responses["health_endpoint"]["commit_message"],
-                "explanation": self.responses["health_endpoint"]["explanation"],
+                "diff": str(self.responses["health_endpoint"]["diff"]),
+                "commit_message": str(
+                    self.responses["health_endpoint"]["commit_message"]
+                ),
+                "explanation": str(self.responses["health_endpoint"]["explanation"]),
             }
 
         # Default generic diff
@@ -154,11 +179,13 @@ class LiteLLMClient(LLMClient):
             ValueError: If required environment variables are not set
         """
         if not LITELLM_AVAILABLE:
-            raise ImportError("LiteLLM package not available. Install with: pip install litellm")
+            raise ImportError(
+                "LiteLLM package not available. Install with: pip install litellm"
+            )
 
         self.model = model
         self.provider = provider
-        
+
         # Set up model mapping for different providers
         self.model_mapping = {
             "openai": {
@@ -184,9 +211,13 @@ class LiteLLMClient(LLMClient):
         # Validate provider and model combination
         if provider in self.model_mapping:
             if model not in self.model_mapping[provider]:
-                logger.warning(f"Model {model} not found in {provider} mapping, using as-is")
+                logger.warning(
+                    f"Model {model} not found in {provider} mapping, using as-is"
+                )
         else:
-            logger.warning(f"Provider {provider} not in predefined mappings, using as-is")
+            logger.warning(
+                f"Provider {provider} not in predefined mappings, using as-is"
+            )
 
         # Set up environment variables for different providers
         self._setup_provider_config(provider)
@@ -195,18 +226,28 @@ class LiteLLMClient(LLMClient):
         """Set up provider-specific configuration."""
         if provider == "openai":
             if not os.getenv("OPENAI_API_KEY"):
-                raise ValueError("OPENAI_API_KEY environment variable is required for OpenAI provider")
+                raise ValueError(
+                    "OPENAI_API_KEY environment variable is required for OpenAI provider"
+                )
         elif provider == "anthropic":
             if not os.getenv("ANTHROPIC_API_KEY"):
-                raise ValueError("ANTHROPIC_API_KEY environment variable is required for Anthropic provider")
+                raise ValueError(
+                    "ANTHROPIC_API_KEY environment variable is required for Anthropic provider"
+                )
         elif provider == "azure":
             if not os.getenv("AZURE_API_KEY"):
-                raise ValueError("AZURE_API_KEY environment variable is required for Azure provider")
+                raise ValueError(
+                    "AZURE_API_KEY environment variable is required for Azure provider"
+                )
             if not os.getenv("AZURE_API_BASE"):
-                raise ValueError("AZURE_API_BASE environment variable is required for Azure provider")
+                raise ValueError(
+                    "AZURE_API_BASE environment variable is required for Azure provider"
+                )
         elif provider == "cohere":
             if not os.getenv("COHERE_API_KEY"):
-                raise ValueError("COHERE_API_KEY environment variable is required for Cohere provider")
+                raise ValueError(
+                    "COHERE_API_KEY environment variable is required for Cohere provider"
+                )
 
     def _get_model_name(self) -> str:
         """Get the full model name for the provider."""
@@ -217,7 +258,7 @@ class LiteLLMClient(LLMClient):
         else:
             return self.model
 
-    def _call_llm(self, messages: list[dict[str, str]], **kwargs) -> str:
+    def _call_llm(self, messages: list[dict[str, str]], **kwargs: Any) -> str:
         """Make a call to the LLM using LiteLLM."""
         try:
             response = completion(
@@ -226,7 +267,8 @@ class LiteLLMClient(LLMClient):
                 temperature=kwargs.get("temperature", 0.1),
                 max_tokens=kwargs.get("max_tokens", 1000),
             )
-            return response.choices[0].message.content
+            content = response.choices[0].message.content
+            return str(content) if content is not None else ""
         except Exception as e:
             raise RuntimeError(f"LiteLLM call failed: {e}") from e
 
@@ -265,7 +307,8 @@ Create a detailed plan to achieve this goal."""
                 max_tokens=1000,
             )
 
-            return json.loads(content)
+            result = json.loads(content)
+            return dict(result)
 
         except json.JSONDecodeError:
             # Fallback to a simple plan if JSON parsing fails
@@ -274,7 +317,7 @@ Create a detailed plan to achieve this goal."""
                     {
                         "id": "implement_goal",
                         "description": goal,
-                        "files_to_modify": ["app/main.py"],
+                        "files_to_modify": "app/main.py",
                         "priority": "high",
                     }
                 ],
@@ -284,7 +327,9 @@ Create a detailed plan to achieve this goal."""
         except Exception as e:
             raise RuntimeError(f"Failed to generate planner spec: {e}") from e
 
-    def generate_code_diff(self, planner_spec: dict[str, Any], context: str) -> dict[str, str]:
+    def generate_code_diff(
+        self, planner_spec: dict[str, Any], context: str
+    ) -> dict[str, str]:
         """Generate code diff and commit message using LiteLLM."""
         system_prompt = """You are a code generation assistant. Given a plan and repository context,
 generate a unified git diff that implements the plan.
@@ -318,16 +363,20 @@ Generate a unified git diff to implement this plan."""
             result = json.loads(content)
 
             # Ensure required keys exist
-            if not all(key in result for key in ["diff", "commit_message", "explanation"]):
+            if not all(
+                key in result for key in ["diff", "commit_message", "explanation"]
+            ):
                 raise ValueError("Response missing required keys")
 
-            return result
+            return dict(result)
 
         except (json.JSONDecodeError, ValueError):
             # Fallback to a simple diff if parsing fails
             tasks = planner_spec.get("tasks", [])
             task_desc = (
-                tasks[0].get("description", "Implement feature") if tasks else "Implement feature"
+                tasks[0].get("description", "Implement feature")
+                if tasks
+                else "Implement feature"
             )
 
             return {
@@ -348,7 +397,9 @@ Generate a unified git diff to implement this plan."""
             raise RuntimeError(f"Failed to generate code diff: {e}") from e
 
 
-def create_llm_client(use_mock: bool = False, model: str = "gpt-3.5-turbo", provider: str = "openai") -> LLMClient:
+def create_llm_client(
+    use_mock: bool = False, model: str = "gpt-3.5-turbo", provider: str = "openai"
+) -> LLMClient:
     """Factory function to create appropriate LLM client.
 
     Args:
