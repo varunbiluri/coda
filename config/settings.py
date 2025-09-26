@@ -26,11 +26,24 @@ DOCKER_NETWORK_MODE = os.getenv("DOCKER_NETWORK", "none")
 # LLM configuration
 USE_MOCK_LLM = os.getenv("USE_MOCK_LLM", "false").lower() in ("true", "1", "yes")
 
-# OpenAI configuration
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+# LiteLLM configuration
+LITELLM_PROVIDER = os.getenv("LITELLM_PROVIDER", "openai")
+LITELLM_MODEL = os.getenv("LITELLM_MODEL", "gpt-3.5-turbo")
 
-# Azure OpenAI configuration
+# OpenAI configuration (for LiteLLM)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# Anthropic configuration (for LiteLLM)
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+
+# Azure configuration (for LiteLLM)
+AZURE_API_KEY = os.getenv("AZURE_API_KEY")
+AZURE_API_BASE = os.getenv("AZURE_API_BASE")
+
+# Cohere configuration (for LiteLLM)
+COHERE_API_KEY = os.getenv("COHERE_API_KEY")
+
+# Legacy Azure OpenAI configuration (for backward compatibility)
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")

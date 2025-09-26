@@ -32,7 +32,7 @@ dependencies = [
     "docker>=6.1.0",
     "aiofiles>=23.2.0",
     "sentence-transformers>=2.2.0",
-    "openai>=1.0.0",
+    "litellm>=1.0.0",
     "python-dotenv>=1.0.0",
 ]
 
