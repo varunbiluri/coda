@@ -17,7 +17,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, status
 from git import Repo
 
-from config.settings import OPENAI_MODEL, USE_MOCK_LLM
+from config.settings import LITELLM_MODEL, LITELLM_PROVIDER, USE_MOCK_LLM
 
 from .core.graph import CodaGraph
 from .core.indexer import RepositoryIndexer
@@ -58,7 +58,7 @@ def _initialize_components() -> tuple[RepositoryIndexer, LLMClient, CodaGraph]:
     if _indexer is None:
         logger.info("Initializing system components...")
         _indexer = RepositoryIndexer()
-        _llm_client = create_llm_client(use_mock=USE_MOCK_LLM, model=OPENAI_MODEL)
+        _llm_client = create_llm_client(use_mock=USE_MOCK_LLM, model=LITELLM_MODEL, provider=LITELLM_PROVIDER)
         _coda_graph = CodaGraph(_indexer, _llm_client)
 
         # Log which LLM client is being used
