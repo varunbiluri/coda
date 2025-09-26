@@ -30,7 +30,9 @@ class RepositoryIndexer:
     content, enabling AI agents to understand and work with codebases effectively.
     """
 
-    def __init__(self, collection_name: str = "coda_repo", persist_dir: str = "./chroma_db"):
+    def __init__(
+        self, collection_name: str = "coda_repo", persist_dir: str = "./chroma_db"
+    ):
         """
         Initialize the repository indexer with vector storage and embedding configuration.
 
@@ -47,7 +49,9 @@ class RepositoryIndexer:
 
         # Configure local embedding model to avoid external API dependencies
         try:
-            embed_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
+            embed_model = HuggingFaceEmbedding(
+                model_name="sentence-transformers/all-MiniLM-L6-v2"
+            )
             Settings.embed_model = embed_model
             logger.info("Successfully initialized HuggingFace embedding model")
         except Exception as e:
@@ -71,7 +75,9 @@ class RepositoryIndexer:
         self.storage_context = StorageContext.from_defaults()
         self.index: VectorStoreIndex | None = None
 
-    def ingest_repository(self, repo_path: str, file_extensions: list[str] | None = None) -> None:
+    def ingest_repository(
+        self, repo_path: str, file_extensions: list[str] | None = None
+    ) -> None:
         """
         Ingest repository content into the vector index for semantic search.
 
@@ -131,7 +137,9 @@ class RepositoryIndexer:
             )
             documents = reader.load_data()
             total_files_processed = len(documents)
-            logger.info(f"Successfully loaded {total_files_processed} documents from {repo_path}")
+            logger.info(
+                f"Successfully loaded {total_files_processed} documents from {repo_path}"
+            )
 
         except Exception as e:
             logger.warning(
@@ -146,7 +154,11 @@ class RepositoryIndexer:
                             if content.strip():  # Only add non-empty files
                                 doc = Document(
                                     text=content,
-                                    metadata={"file_name": str(file_path.relative_to(repo_path))},
+                                    metadata={
+                                        "file_name": str(
+                                            file_path.relative_to(repo_path)
+                                        )
+                                    },
                                 )
                                 documents.append(doc)
                                 total_files_processed += 1
@@ -159,7 +171,9 @@ class RepositoryIndexer:
         # Create vector index from processed documents
         try:
             self.index = VectorStoreIndex.from_documents(documents)
-            logger.info(f"Successfully indexed {len(documents)} documents from {repo_path}")
+            logger.info(
+                f"Successfully indexed {len(documents)} documents from {repo_path}"
+            )
         except Exception as e:
             logger.error(f"Failed to create vector index: {e}")
             raise RuntimeError(f"Document indexing failed: {e}") from e

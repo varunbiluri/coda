@@ -76,7 +76,9 @@ class PlannerAgent:
                 estimated_changes=spec_dict["estimated_changes"],
             )
 
-            logger.info(f"Generated execution plan with {len(planner_spec.tasks)} tasks")
+            logger.info(
+                f"Generated execution plan with {len(planner_spec.tasks)} tasks"
+            )
             for i, task in enumerate(planner_spec.tasks, 1):
                 logger.debug(f"Task {i}: {task.get('description', 'No description')}")
 

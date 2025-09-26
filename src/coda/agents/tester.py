@@ -53,10 +53,18 @@ class TesterAgent:
             )
 
             # Get output
-            logs = container.decode("utf-8") if isinstance(container, bytes) else str(container)
+            logs = (
+                container.decode("utf-8")
+                if isinstance(container, bytes)
+                else str(container)
+            )
 
             # Determine success based on pytest output
-            success = "FAILED" not in logs and "ERROR" not in logs and "failed" not in logs.lower()
+            success = (
+                "FAILED" not in logs
+                and "ERROR" not in logs
+                and "failed" not in logs.lower()
+            )
 
             if success:
                 logger.info("Tests passed successfully")
@@ -77,13 +85,23 @@ class TesterAgent:
 
             # Try to extract stdout/stderr if available
             if hasattr(e, "stdout") and e.stdout:
-                stdout = e.stdout.decode("utf-8") if isinstance(e.stdout, bytes) else str(e.stdout)
+                stdout = (
+                    e.stdout.decode("utf-8")
+                    if isinstance(e.stdout, bytes)
+                    else str(e.stdout)
+                )
             if hasattr(e, "stderr") and e.stderr:
-                stderr = e.stderr.decode("utf-8") if isinstance(e.stderr, bytes) else str(e.stderr)
+                stderr = (
+                    e.stderr.decode("utf-8")
+                    if isinstance(e.stderr, bytes)
+                    else str(e.stderr)
+                )
             if hasattr(e, "exit_status"):
                 exit_code = e.exit_status
 
-            return TesterOutput(success=False, stdout=stdout, stderr=stderr, exit_code=exit_code)
+            return TesterOutput(
+                success=False, stdout=stdout, stderr=stderr, exit_code=exit_code
+            )
         except Exception as e:
             logger.error(f"Test execution failed: {str(e)}")
             return TesterOutput(
@@ -93,7 +111,7 @@ class TesterAgent:
                 exit_code=1,
             )
 
-    def _ensure_docker_image(self):
+    def _ensure_docker_image(self) -> None:
         """Ensure the Docker image exists."""
         try:
             self.docker_client.images.get("coda-sandbox")
