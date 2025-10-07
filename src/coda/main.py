@@ -9,20 +9,26 @@ import asyncio
 import json
 import logging
 import shutil
+import traceback
 import uuid
 from pathlib import Path
 from typing import Any
 
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, status
 from git import Repo
 
 from config.settings import LITELLM_MODEL, LITELLM_PROVIDER, USE_MOCK_LLM
 
+from .agents.repo_gist import RepoGistAgent
 from .core.graph import CodaGraph
 from .core.indexer import RepositoryIndexer
 from .core.llm_client import LLMClient, create_llm_client
 from .core.models import RunContext, RunRequest, RunResult, RunStatus
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -57,7 +63,9 @@ def _initialize_components() -> tuple[RepositoryIndexer, LLMClient, CodaGraph]:
 
     if _indexer is None:
         logger.info("Initializing system components...")
-        _indexer = RepositoryIndexer()
+        # Determine embedding provider based on LiteLLM provider configuration
+        embedding_provider = "azure" if LITELLM_PROVIDER == "azure" else "local"
+        _indexer = RepositoryIndexer(embedding_provider=embedding_provider)
         _llm_client = create_llm_client(
             use_mock=USE_MOCK_LLM, model=LITELLM_MODEL, provider=LITELLM_PROVIDER
         )
@@ -71,9 +79,12 @@ def _initialize_components() -> tuple[RepositoryIndexer, LLMClient, CodaGraph]:
         logger.info(f"System components initialized successfully (LLM: {client_type})")
 
     # Type assertions to ensure components are initialized
-    assert _indexer is not None
-    assert _llm_client is not None
-    assert _coda_graph is not None
+    if _indexer is None:
+        raise RuntimeError("Indexer component failed to initialize")
+    if _llm_client is None:
+        raise RuntimeError("LLM client component failed to initialize")
+    if _coda_graph is None:
+        raise RuntimeError("Coda graph component failed to initialize")
 
     return _indexer, _llm_client, _coda_graph
 
@@ -339,13 +350,15 @@ async def create_run(request: RunRequest) -> dict[str, Any]:
         }
 
     except Exception as e:
-        logger.error(f"Workflow execution failed for run {run_id}: {str(e)}")
+        error_msg = str(e) if str(e) else f"Unknown error: {type(e).__name__}"
+        logger.error(f"Workflow execution failed for run {run_id}: {error_msg}")
+        logger.error(f"Full traceback: {traceback.format_exc()}")
 
         # Write error result to file
         error_result = {
             "run_id": str(run_id),
             "status": RunStatus.FAILED.value,
-            "error_message": str(e),
+            "error_message": error_msg,
         }
 
         with open(result_path, "w") as f:
@@ -366,6 +379,53 @@ async def health_check() -> dict[str, str]:
         Health status information
     """
     return {"status": "healthy", "service": "coda-orchestrator"}
+
+
+@app.post("/repo-gist")  # type: ignore
+async def generate_repository_gist(request: dict[str, Any]) -> dict[str, Any]:
+    """
+    Generate a comprehensive one-pager gist of a remote Git repository.
+
+    Args:
+        request: Dictionary containing:
+            - repo_url: URL of the remote Git repository
+            - branch: Branch to analyze (optional, defaults to 'main')
+
+    Returns:
+        Repository gist with analysis and summary
+    """
+    try:
+        repo_url = request.get("repo_url")
+        branch = request.get("branch", "main")
+
+        if not repo_url:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Repository URL is required",
+            )
+
+        # Initialize components
+        indexer, llm_client, coda_graph = _initialize_components()
+
+        # Create RepoGistAgent
+        repo_gist_agent = RepoGistAgent(llm_client)
+
+        # Generate repository gist
+        logger.info(f"Generating repository gist for {repo_url}")
+        result = repo_gist_agent.analyze_repository(repo_url, branch)
+
+        return {
+            "status": "success",
+            "repository_gist": result,
+            "timestamp": str(uuid.uuid4()),
+        }
+
+    except Exception as e:
+        logger.error(f"Repository gist generation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Repository gist generation failed: {str(e)}",
+        ) from e
 
 
 async def _setup_workspace(repo_path: str, workspace_path: Path, branch: str) -> None:

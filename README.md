@@ -11,9 +11,13 @@ Coda orchestrates four specialized AI agents through a LangGraph workflow to aut
 ## Key Features
 
 - **Intelligent Planning** - Semantic repository analysis with LlamaIndex + ChromaDB
-- **Smart Code Generation** - Context-aware unified git diffs
-- **Safe Git Operations** - Isolated branch creation and patch validation
+- **Smart Code Generation** - Context-aware unified git diffs with Azure OpenAI
+- **Safe Git Operations** - Isolated branch creation and patch validation with fallback mechanisms
 - **Sandboxed Testing** - Docker containers with network isolation
+- **Repository Analysis** - AI-powered git repository summarization with dynamic cloning
+- **Tree-sitter Chunking** - Language-specific semantic code parsing for Python, JavaScript, TypeScript, Go, Java
+- **Vector Embeddings** - Azure OpenAI embeddings with smart rate limiting and batch processing
+- **Multi-Provider Support** - LiteLLM integration for OpenAI, Anthropic, Azure, Cohere
 
 ## Getting Started
 
@@ -147,7 +151,7 @@ Key environment variables:
 
 
 
-## Demo: From Failing Test to Working Code
+## Demo: Multi-Agent Workflow in Action
 
 <details>
 <summary><strong>Step 1: The Problem</strong></summary>
@@ -173,21 +177,26 @@ python -m pytest tests/test_health.py -v
 # Go back to project root and start Coda
 cd ../..
 source .venv/bin/activate
-export TOKENIZERS_PARALLELISM=false
 
 # Start the server
-invoke run &
+invoke dev &
 
-# Run the magic!
-invoke demo
+# Run the complete workflow!
+invoke workflow-demo
 ```
 
 **What happens:**
 
-- **Planner Agent** analyzes the goal and repository
-- **Coder Agent** generates the required code changes
-- **ApplyPatch Agent** applies changes to a new git branch
-- **Tester Agent** runs tests in isolated Docker container
+- **Planner Agent** analyzes the goal and repository context using LlamaIndex + ChromaDB
+- **Coder Agent** generates unified git diff with commit message using Azure OpenAI
+- **ApplyPatch Agent** applies changes to a new git branch with fallback mechanisms
+- **Tester Agent** runs tests in isolated Docker container with network isolation
+
+**Key Features Demonstrated:**
+- **Intelligent Planning** - Semantic repository analysis
+- **Smart Code Generation** - Context-aware unified diffs
+- **Safe Git Operations** - Isolated branch creation and patch validation
+- **Sandboxed Testing** - Docker containers with network isolation
 
 </details>
 
@@ -212,8 +221,64 @@ python -m pytest tests/test_health.py -v
 - Corresponding test updates
 - Clean git commit with descriptive message
 - All tests passing in the generated workspace
+- **Generated Code Display** - Shows the actual diff and applied code
+- **Professional Summary** - Complete workflow execution summary
 
 </details>
+
+## Repository Analysis: AI-Powered Git Repository Insights
+
+Coda includes powerful repository analysis capabilities that can generate comprehensive technical summaries of any Git repository with intelligent code understanding and vector embeddings.
+
+### Quick Start: Repository Analysis
+
+```bash
+# Analyze any Git repository with default settings
+invoke repo-analysis-demo
+
+# Analyze specific repository and branch
+invoke repo-analysis-demo --repo-url="https://github.com/tiangolo/fastapi.git" --branch="master"
+
+# Custom analysis focus
+invoke repo-analysis-demo --repo-url="https://github.com/microsoft/vscode.git" --branch="main" --query="Analyze the TypeScript architecture and build system"
+```
+
+**What this does:**
+- **Dynamic Repository Cloning** - Actually clones and analyzes the specified repository
+- **Intelligent Git Strategy** - Chooses optimal checkout method (sparse, shallow, or full)
+- **Tree-sitter Semantic Chunking** - Language-specific code parsing and understanding
+- **Vector Embeddings** - Azure OpenAI or OpenAI embeddings for enhanced understanding
+- **AI-Powered Summarization** - Generates professional technical summaries
+- **Smart Rate Limiting** - Respects API limits while maximizing analysis quality
+
+### Supported Repository Types
+
+- **Python Projects** - FastAPI, Django, Flask applications
+- **JavaScript/TypeScript** - Node.js, React, Vue.js applications
+- **Go Projects** - Microservices, CLI tools, web services
+- **Java Projects** - Spring Boot, Maven, Gradle applications
+- **Multi-language** - Complex projects with multiple technologies
+- **Documentation** - Well-documented repositories with comprehensive READMEs
+
+### Example Output
+
+The system generates professional technical summaries including:
+
+- **Project Overview** - Clear description of what the repository does
+- **Technology Stack** - Languages, frameworks, and tools used
+- **Architecture** - Key components and how they work together
+- **Getting Started** - Setup instructions and usage examples
+- **Project Structure** - Important files and directories explained
+- **Analysis Metrics** - Files processed, embeddings generated, execution time
+
+### Advanced Features
+
+- **Dynamic Repository Analysis** - Clones and analyzes any Git repository
+- **Intelligent Git Checkouts** - Automatically chooses the most efficient checkout strategy
+- **Tree-sitter Semantic Understanding** - Language-specific parsing for Python, JavaScript, TypeScript, Go, Java
+- **Vector Embeddings** - Azure OpenAI, OpenAI, or local HuggingFace embeddings with smart rate limiting
+- **Professional Summaries** - Enterprise-grade technical documentation generation
+- **Scalable Processing** - Handles repositories of any size with intelligent chunking
 
 ## Architecture
 
@@ -228,6 +293,11 @@ graph LR
 
     D -.-> H[LlamaIndex + ChromaDB]
     G -.-> I[Docker Sandbox]
+
+    J[Repository Analysis] --> K[Git Strategy]
+    K --> L[Tree-sitter Chunking]
+    L --> M[Vector Embeddings]
+    M --> N[LLM Summarization]
 ```
 
 ### The Four Agents
@@ -235,9 +305,18 @@ graph LR
 | Agent             | Purpose                                                 | Technology                 |
 | ----------------- | ------------------------------------------------------- | -------------------------- |
 | **Planner**       | Analyzes repository context and creates execution plans | LlamaIndex semantic search |
-| **Coder**         | Generates unified git diffs with commit messages        | Context-aware LLM          |
-| **ApplyPatch**    | Safely applies changes to new git branches              | GitPython validation       |
+| **Coder**         | Generates unified git diffs with commit messages        | Context-aware LLM (Azure OpenAI) |
+| **ApplyPatch**    | Safely applies changes to new git branches              | GitPython validation + fallback |
 | **Tester**        | Runs tests in isolated Docker containers                | Docker + pytest            |
+
+### Repository Analysis Pipeline
+
+| Component         | Purpose                                                 | Technology                 |
+| ----------------- | ------------------------------------------------------- | -------------------------- |
+| **Git Strategy**  | Intelligent checkout optimization                       | Sparse/dense/shallow clones |
+| **Tree-sitter**   | Semantic code chunking and parsing                     | Language-specific AST parsing |
+| **Vector Store**  | Embedding generation and storage                        | Azure OpenAI + ChromaDB |
+| **LLM Pipeline**  | Repository summarization and insights                  | Azure OpenAI GPT models |
 
 ## Development
 
@@ -248,11 +327,20 @@ pip install --upgrade invoke
 ### Commands
 
 ```bash
+# Development
 invoke test                    # Run all tests with coverage
 invoke lint                    # Code quality checks
-invoke format                  # Auto-format code
+invoke format-code             # Auto-format code
 invoke dev                     # Development server with reload
 invoke clean                   # Clean generated files
+
+# Multi-Agent Workflow
+invoke workflow-demo           # Complete workflow demonstration (Planner → Coder → ApplyPatch → Tester)
+
+# Repository Analysis
+invoke repo-analysis-demo      # AI-powered repository analysis with default settings
+invoke repo-analysis-demo --repo-url="https://github.com/user/repo.git" --branch="main"
+invoke repo-analysis-demo --repo-url="https://github.com/user/repo.git" --branch="main" --query="Custom analysis focus"
 
 # Pre-commit hooks
 invoke pre-commit-install      # Install pre-commit hooks
@@ -263,9 +351,8 @@ invoke pre-commit-update       # Update pre-commit hook versions
 
 ## Future Roadmap
 
-### Phase 1: Remote Repository Support
-- **GitHub Integration**: Direct cloning and working with GitHub repositories
-- **Pull Request Automation**: Automatic PR creation and management
+### Phase 1: Enhanced Repository Support
+- **GitHub Integration**: Direct PR creation and management
 
 ### Phase 2: Developer Companion Features
 - **Interactive Chat Interface**: Real-time chat with the AI system for code assistance
@@ -274,13 +361,15 @@ invoke pre-commit-update       # Update pre-commit hook versions
 - **Documentation Generation**: Automatic API documentation and code comments
 
 ### Phase 3: Advanced AI Capabilities
-- **Multi-Language Support**: Python, TypeScript, Rust
+- **Multi-Language Support**: Rust, TypeScript
 - **Testing Strategies**: Comprehensive test generation and coverage analysis
 - **Security Scanning**: Automated vulnerability detection and fixes
+- **Performance Analysis**: Code optimization suggestions
 
 ### Phase 4: Enterprise Features
 - **Monitoring and Analytics**: Development metrics and productivity insights
 - **Custom Model Training**: Fine-tuned models for specific codebases and patterns
+- **Team Collaboration**: Multi-user workflows and shared knowledge bases
 
 ## Documentation
 
@@ -298,6 +387,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - [ChromaDB](https://www.trychroma.com/) - Vector database
 - [Docker](https://www.docker.com/) - Containerized testing
 - [LiteLLM](https://github.com/BerriAI/litellm) - Unified LLM interface
+- [Tree-sitter](https://tree-sitter.github.io/) - Language-specific semantic code parsing
 
 ---
 
