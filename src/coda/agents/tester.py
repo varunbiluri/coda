@@ -42,7 +42,11 @@ class TesterAgent:
 
             container = self.docker_client.containers.run(
                 "coda-sandbox",
-                command=["pytest", "-q"],
+                command=[
+                    "sh",
+                    "-c",
+                    "cd /workspace && PYTHONPATH=/workspace pytest -q",
+                ],
                 volumes={abs_workspace_path: {"bind": "/workspace", "mode": "rw"}},
                 working_dir="/workspace",
                 network_mode="none",  # No network access for security

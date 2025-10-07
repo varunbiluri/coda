@@ -43,11 +43,6 @@ AZURE_API_BASE = os.getenv("AZURE_API_BASE")
 # Cohere configuration (for LiteLLM)
 COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 
-# Legacy Azure OpenAI configuration (for backward compatibility)
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
-AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
-AZURE_OPENAI_MODEL = os.getenv("AZURE_OPENAI_MODEL", "gpt-35-turbo")
 
 # Embedding configuration
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")

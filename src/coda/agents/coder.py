@@ -42,7 +42,9 @@ class CoderAgent:
 
         # Query for context on specific files
         context_query = f"files: {' '.join(files_to_modify)} {planner_spec.context}"
-        context_results = self.indexer.query(context_query, top_k=5)
+        context_results = self.indexer.query(
+            context_query, top_k=3
+        )  # Reduce context to avoid confusion
         context = "\n\n".join(
             [
                 f"File: {result['metadata'].get('file_name', 'unknown')}\n{result['content']}"

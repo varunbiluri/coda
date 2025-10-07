@@ -163,6 +163,80 @@ class MockLLMClient(LLMClient):
             "explanation": "Added new feature endpoint",
         }
 
+    def _call_llm(self, messages: list[dict[str, str]]) -> str:
+        """Call LLM with messages for general text generation.
+
+        Args:
+            messages: List of message dictionaries with 'role' and 'content'
+
+        Returns:
+            Generated text response
+        """
+        # Extract the user message content
+        user_message = None
+        for message in messages:
+            if message.get("role") == "user":
+                user_message = message.get("content", "")
+                break
+
+        if not user_message:
+            return "Mock LLM response: No user message found"
+
+        # Generate a mock repository summary based on the prompt
+        if "repository" in user_message.lower() and "summary" in user_message.lower():
+            return """# Repository Analysis Summary
+
+## Project Overview
+This is a comprehensive FastAPI-based application designed for AI-powered code orchestration and testing. The project demonstrates advanced multi-agent workflows for automated software development.
+
+## Technology Stack
+- **Backend**: FastAPI (Python 3.11+)
+- **AI/ML**: LiteLLM, LlamaIndex, ChromaDB
+- **Testing**: Pytest with Docker sandbox
+- **Development**: uv for dependency management
+- **Code Quality**: Pre-commit hooks (black, isort, ruff, mypy, bandit)
+
+## Architecture
+The system follows a multi-agent architecture with four specialized components:
+
+1. **Planner Agent**: Analyzes goals and creates execution plans
+2. **Coder Agent**: Generates code changes using LLM
+3. **ApplyPatch Agent**: Applies changes to Git repositories
+4. **Tester Agent**: Runs tests in isolated Docker containers
+
+## Key Features
+- **Intelligent Git Strategies**: Sparse vs dense checkout optimization
+- **Semantic Code Analysis**: Tree-sitter based chunking
+- **Vector Embeddings**: ChromaDB for semantic search
+- **Repository Analysis**: AI-powered codebase understanding
+- **Professional Summaries**: Automated technical documentation
+
+## Getting Started
+```bash
+# Install dependencies
+uv sync
+
+# Start the server
+python main.py
+
+# Run demonstrations
+invoke workflow-demo
+invoke repo-analysis-demo
+```
+
+## Project Structure
+- `src/coda/`: Core application code
+- `src/coda/agents/`: Multi-agent system components
+- `src/coda/core/`: Core utilities and clients
+- `examples/`: Sample services for testing
+- `scripts/`: Demonstration scripts
+- `tests/`: Comprehensive test suite
+
+This repository showcases enterprise-grade AI development practices with professional code quality, comprehensive testing, and advanced multi-agent orchestration capabilities."""
+
+        # Default mock response
+        return f"Mock LLM response for: {user_message[:100]}..."
+
 
 class LiteLLMClient(LLMClient):
     """LiteLLM client for unified access to multiple LLM providers."""
@@ -199,8 +273,8 @@ class LiteLLMClient(LLMClient):
                 "claude-3-opus": "claude-3-opus-20240229",
             },
             "azure": {
-                "gpt-35-turbo": "azure/your-deployment-name",
-                "gpt-4": "azure/your-gpt4-deployment",
+                "gpt-35-turbo": "azure/gpt-35-turbo",
+                "gpt-4": "azure/gpt-4",
             },
             "cohere": {
                 "command": "command",
@@ -252,7 +326,8 @@ class LiteLLMClient(LLMClient):
     def _get_model_name(self) -> str:
         """Get the full model name for the provider."""
         if self.provider == "azure":
-            return self.model_mapping.get(self.provider, {}).get(self.model, self.model)
+            # For Azure, use the model name directly as deployment name
+            return f"azure/{self.model}"
         elif self.provider == "anthropic":
             return self.model_mapping.get(self.provider, {}).get(self.model, self.model)
         else:
@@ -341,13 +416,24 @@ Return a JSON object with this structure:
     "explanation": "brief explanation of changes"
 }
 
-The diff must be a valid unified diff format that can be applied with 'git apply'."""
+CRITICAL: The diff must be a valid unified diff format that can be applied with 'git apply'.
+- Use correct hunk headers that cover the ENTIRE range of changes
+- If adding content in the middle of a file, ensure the hunk header covers from the start to the end of the file
+- Example: For a file with 11 lines where you add content at line 7, use @@ -1,11 +1,17 @@ not @@ -1,6 +1,8 @@
+- The hunk header format is @@ -start_line,line_count +start_line,new_line_count @@
+- Always include enough context lines to make the diff unambiguous"""
 
         user_prompt = f"""Plan to implement:
 {json.dumps(planner_spec, indent=2)}
 
 Repository Context:
 {context}
+
+CRITICAL INSTRUCTIONS:
+- Follow the EXACT task descriptions in the plan
+- If the task says "Implement /health endpoint", create a /health endpoint, NOT /new-feature or any other endpoint
+- Pay attention to the specific requirements in each task
+- Generate a unified git diff that implements EXACTLY what is requested
 
 Generate a unified git diff to implement this plan."""
 
