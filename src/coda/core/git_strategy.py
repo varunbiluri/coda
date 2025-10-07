@@ -230,6 +230,9 @@ class GitStrategy:
         """Determine the optimal checkout strategy."""
         repo_size = repo_metadata.get("size", 0)
         if isinstance(repo_size, str):
+            logger.warning(
+                f"Repository size is a string ('{repo_size}'); defaulting to 0. Metadata: {repo_metadata}"
+            )
             repo_size = 0  # Default to 0 if size is not numeric
 
         has_api = repo_metadata.get("api_available", False)

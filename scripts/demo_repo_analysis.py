@@ -295,18 +295,6 @@ def display_repository_summary(analysis: dict[str, Any]) -> None:
         print(summary)
         print()
 
-    # Capabilities demonstrated
-    print("CAPABILITIES DEMONSTRATED")
-    print("-" * 40)
-    print("- Intelligent Git checkout strategies")
-    print("- Tree-sitter semantic code chunking")
-    print("- Vector embeddings for enhanced understanding")
-    print("- LLM-powered repository summarization")
-    print("- Professional technical analysis")
-    print()
-
-    print("=" * 80)
-
 
 def export_analysis_results(analysis: dict[str, Any], output_dir: str = None) -> str:
     """Export analysis results to a markdown file."""

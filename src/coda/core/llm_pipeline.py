@@ -261,7 +261,7 @@ class LLMPipeline:
             context = {
                 "module_path": module_path,
                 "files": module_files,
-                "file_summaries": [fs.dict() for fs in file_summaries],
+                "file_summaries": [fs.model_dump() for fs in file_summaries],
                 "total_chunks": len(chunks),
             }
 

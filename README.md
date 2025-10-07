@@ -12,7 +12,6 @@ Coda orchestrates four specialized AI agents through a LangGraph workflow to aut
 
 - **Intelligent Planning** - Semantic repository analysis with LlamaIndex + ChromaDB
 - **Smart Code Generation** - Context-aware unified git diffs with Azure OpenAI
-- **Safe Git Operations** - Isolated branch creation and patch validation with fallback mechanisms
 - **Sandboxed Testing** - Docker containers with network isolation
 - **Repository Analysis** - AI-powered git repository summarization with dynamic cloning
 - **Tree-sitter Chunking** - Language-specific semantic code parsing for Python, JavaScript, TypeScript, Go, Java
